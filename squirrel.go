@@ -98,7 +98,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("\nMost positively correlated event:")
+	fmt.Println("Most positively correlated event:")
 	fmt.Printf("  %s (%.3f)\n", mostPosEvent, mostPosVal)
 
 	fmt.Println("\nMost negatively correlated event:")
