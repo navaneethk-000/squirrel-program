@@ -113,7 +113,7 @@ func main() {
 		}
 
 	}
-	fmt.Println("Most Positive value : ", mostNegVal, mostPosEvent)
-	fmt.Println("Most Negative value : ", mostPosVal, mostNegEvent)
+	fmt.Println("Most Positive value : ", mostPosVal, mostPosEvent)
+	fmt.Println("Most Negative value : ", mostNegVal, mostNegEvent)
 
 }
