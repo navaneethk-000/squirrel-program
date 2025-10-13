@@ -88,12 +88,10 @@ func main() {
 		return
 	}
 
-	c := getCount(journal, "carrot")
-
 	correlation := make(map[string]float64)
 	for _, entry := range journal {
 		for _, e := range entry.Events {
-			c = getCount(journal, e)
+			c := getCount(journal, e)
 			correlation[e] = phi(c)
 
 		}
