@@ -5,102 +5,117 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"slices"
 )
 
-type JournalEntry struct {
+type JournalEntries struct {
 	Events   []string `json:"events"`
 	Squirrel bool     `json:"squirrel"`
 }
 
-func phi(x, y []bool) float64 {
-	if len(x) != len(y) {
+type Counts struct {
+	n00 uint
+	n01 uint
+	n10 uint
+	n11 uint
+}
+
+func phi(counts Counts) float64 {
+
+	n00 := float64(counts.n00)
+	n01 := float64(counts.n01)
+	n10 := float64(counts.n10)
+	n11 := float64(counts.n11)
+
+	num := float64((n11 * n00) - (n10 * n01))
+	n1 := float64(n11 + n10)
+	n0 := float64(n01 + n00)
+	n1_ := float64(n11 + n01)
+	n0_ := float64(n10 + n00)
+
+	den := math.Sqrt(float64((n1 * n0 * n1_ * n0_)))
+
+	if den == 0 {
 		return 0
 	}
-	var n11, n10, n01, n00 float64
-	for i := range x {
-		switch {
-		case x[i] && y[i]:
-			n11++
-		case x[i] && !y[i]:
-			n10++
-		case !x[i] && y[i]:
-			n01++
-		default:
-			n00++
+	return num / den
+}
+
+func getCount(entries []JournalEntries, event string) Counts {
+
+	var n11, n01, n10, n00 uint
+
+	for _, entry := range entries {
+		if slices.Contains(entry.Events, event) {
+			if entry.Squirrel {
+				n11++
+			} else {
+				n10++
+			}
+
+		} else {
+			if entry.Squirrel {
+				n01++
+			} else {
+				n00++
+			}
+
 		}
 	}
-	numerator := (n11 * n00) - (n10 * n01)
-	denominator := math.Sqrt((n11 + n10) * (n01 + n00) * (n11 + n01) * (n10 + n00))
-	if denominator == 0 {
-		return 0
+
+	counts := Counts{
+		n00: n00,
+		n11: n11,
+		n01: n01,
+		n10: n10,
 	}
-	return numerator / denominator
+
+	return counts
+
 }
 
 func main() {
+
 	data, err := os.ReadFile("journal.json")
 	if err != nil {
 		fmt.Println("Error reading json file:", err)
 		return
 	}
 
-	var journal []JournalEntry
+	var journal []JournalEntries
 	if err := json.Unmarshal(data, &journal); err != nil {
 		fmt.Println("Error during unmarshal: ", err)
 		return
 	}
 
-	n := len(journal)
-	if n == 0 {
-		fmt.Println("No entries found.")
-		return
-	}
+	c := getCount(journal, "carrot")
 
-	events := map[string]bool{}
+	correlation := make(map[string]float64)
 	for _, entry := range journal {
 		for _, e := range entry.Events {
-			events[e] = true
+			c = getCount(journal, e)
+			correlation[e] = phi(c)
+
 		}
 	}
 
-	y := make([]bool, n)
-	for i := range journal {
-		y[i] = journal[i].Squirrel
+	var mostPosEvent string
+	var mostNegEvent string
+	var mostNegVal float64
+	var mostPosVal float64
+
+	for key, value := range correlation {
+		if mostPosVal < value {
+			mostPosVal = value
+			mostPosEvent = key
+		} else if mostNegVal > value {
+			mostNegVal = value
+			mostNegEvent = key
+
+		}
+
 	}
+	fmt.Println("Most Positive value : ", mostNegVal, mostPosEvent)
+	fmt.Println("Most Negative value : ", mostPosVal, mostNegEvent)
 
-	var mostPosEvent, mostNegEvent string
-	mostPosVal := -1.0
-	mostNegVal := 1.0
-
-	for event := range events {
-
-		x := make([]bool, n)
-		for i := range journal {
-			found := false
-			for _, e := range journal[i].Events {
-				if e == event {
-					found = true
-					break
-				}
-			}
-			x[i] = found
-		}
-
-		c := phi(x, y)
-
-		if c > mostPosVal {
-			mostPosVal = c
-			mostPosEvent = event
-		}
-		if c < mostNegVal {
-			mostNegVal = c
-			mostNegEvent = event
-		}
-	}
-
-	fmt.Println("Most positively correlated event:")
-	fmt.Printf("  %s (%.3f)\n", mostPosEvent, mostPosVal)
-
-	fmt.Println("\nMost negatively correlated event:")
-	fmt.Printf("  %s (%.3f)\n", mostNegEvent, mostNegVal)
 }
