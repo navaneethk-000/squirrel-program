@@ -72,13 +72,13 @@ func main() {
 	mostPosVal := -1.0
 	mostNegVal := 1.0
 
-	for ev := range events {
+	for event := range events {
 
 		x := make([]bool, n)
 		for i := range journal {
 			found := false
 			for _, e := range journal[i].Events {
-				if e == ev {
+				if e == event {
 					found = true
 					break
 				}
@@ -90,17 +90,17 @@ func main() {
 
 		if c > mostPosVal {
 			mostPosVal = c
-			mostPosEvent = ev
+			mostPosEvent = event
 		}
 		if c < mostNegVal {
 			mostNegVal = c
-			mostNegEvent = ev
+			mostNegEvent = event
 		}
 	}
 
 	fmt.Println("\nMost positively correlated event:")
-	fmt.Printf("  %s (%.4f)\n", mostPosEvent, mostPosVal)
+	fmt.Printf("  %s (%.3f)\n", mostPosEvent, mostPosVal)
 
 	fmt.Println("\nMost negatively correlated event:")
-	fmt.Printf("  %s (%.4f)\n", mostNegEvent, mostNegVal)
+	fmt.Printf("  %s (%.3f)\n", mostNegEvent, mostNegVal)
 }
