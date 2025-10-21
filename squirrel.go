@@ -42,9 +42,6 @@ func phi(counts Counts) float64 {
 
 	den := math.Sqrt(float64((n1_ * n0_ * n_1 * n_0)))
 
-	if den == 0 {
-		return 0
-	}
 	return num / den
 }
 
